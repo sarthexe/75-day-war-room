@@ -13,7 +13,7 @@ import {
 import type { AuthApi } from '../../hooks/useAuth';
 import type { CloudSyncStatus } from '../../hooks/useCloudSync';
 import { describeSync } from '../../hooks/useCloudSync';
-import { supabase } from '../../lib/supabase';
+import { hasSupabaseKey, hasSupabaseUrl, supabase } from '../../lib/supabase';
 
 interface AuthModalProps {
   open: boolean;
@@ -177,9 +177,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             </div>
 
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5 font-mono text-[11px] text-zinc-300">
-              <div>VITE_SUPABASE_URL=https://&lt;project&gt;.supabase.co</div>
-              <div className="mt-1">VITE_SUPABASE_ANON_KEY=&lt;anon public key&gt;</div>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5 font-mono text-[11px] text-zinc-300 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span>VITE_SUPABASE_URL</span>
+                <span className={hasSupabaseUrl ? 'text-emerald-400' : 'text-rose-400'}>
+                  {hasSupabaseUrl ? 'Detected' : 'Missing in build'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>VITE_SUPABASE_ANON_KEY</span>
+                <span className={hasSupabaseKey ? 'text-emerald-400' : 'text-rose-400'}>
+                  {hasSupabaseKey ? 'Detected' : 'Missing in build'}
+                </span>
+              </div>
+              <div className="pt-1 text-[10px] text-zinc-500">
+                Also accepts VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY.
+                After saving env vars in Vercel, trigger a fresh Redeploy.
+              </div>
             </div>
 
             <button
