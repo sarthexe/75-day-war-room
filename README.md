@@ -15,11 +15,11 @@ No backend. No accounts. Everything lives in your browser's `localStorage`, with
 
 | # | View | What it does |
 |---|------|--------------|
-| 1 | **Command Center** | LWD/GATE countdowns, Phase 1↔2 and day-type toggles, editable checkable timetable with live-block highlighting, daily non-negotiables, 75-day heatmap + streak |
-| 2 | **GATE CSE 2027** | 55–60 target banner, tiered syllabus (Tier 1/2/3) with revision % + PYQ counters, mock test logger with 55-mark reference chart, 1-page mistake notebook |
-| 3 | **C++ DSA** | Sticky 60-minute 4-phase AlgoHunt timer, 5-week synced roadmap, Week 2 C-tracing gap checklist, problem log with required pattern triggers and auto re-attempt flags |
-| 4 | **Run & Sleep** | Wake-up ramp chart toward 7:00 AM with 7h sleep indicators, run/walk interval log, editable pre/post-run checklist |
-| 5 | **Jobs & Projects** | Application table + mini-kanban with weekly counter, weekend project sprints with checkable Sunday deliverables |
+| 1 | **Today** | LWD/GATE countdowns, Phase 1↔2 & day-type toggles, clean checkable timetable (with Edit mode & direct AlgoHunt link on DSA blocks), daily non-negotiables, 75-day heatmap |
+| 2 | **GATE CSE** | Focused Syllabus / Mocks / Mistakes tabs, tiered syllabus with lecture % + PYQ counters, mock trend chart with 55-mark target, 1-page mistake notebook |
+| 3 | **Run & Sleep** | Sleep Shift ramp chart toward 7:00 AM + 7h indicator, Runs & editable pre/post-run checklist |
+| 4 | **Career** | Job Applications (table + mini-kanban) with weekly counter, Weekend Project Sprints with Sunday deliverables |
+| ↗ | **AlgoHunt DSA** | Direct external link to [algohunt.bharathships.me/explore](https://algohunt.bharathships.me/explore) |
 
 ## Run locally
 
@@ -68,9 +68,8 @@ Then in the app: sidebar → **Sign in to sync** → create an account → repea
 
 ## Keyboard shortcuts
 
-- `1`–`5` — switch views (ignored while typing in an input)
-- `Space` — start/pause the DSA protocol timer (DSA view only)
-- `Esc` — close the settings modal
+- `1`–`4` — switch views (ignored while typing in an input)
+- `Esc` — close open modals
 
 ## Data & backups
 

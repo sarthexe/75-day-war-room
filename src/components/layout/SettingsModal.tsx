@@ -305,13 +305,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose, isO
               <span>Switch Views</span>
               <span className="font-mono text-zinc-200">
                 <kbd className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5">1</kbd> –{' '}
-                <kbd className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5">5</kbd>
+                <kbd className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5">4</kbd>
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span>DSA Timer Play/Pause</span>
+              <span>Close Modal</span>
               <kbd className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 font-mono text-zinc-200">
-                Space
+                Esc
               </kbd>
             </div>
           </div>

@@ -1,4 +1,4 @@
-export type ViewId = 'dashboard' | 'gate' | 'dsa' | 'habits' | 'career';
+export type ViewId = 'dashboard' | 'gate' | 'habits' | 'career';
 
 // --- View 1: Command Center ---
 export type PhaseId = 'phase1' | 'phase2';
@@ -88,40 +88,7 @@ export interface MistakeEntry {
   ruleToRemember: string;
 }
 
-// --- View 3: C++ DSA & AlgoHunt Tracker ---
-export interface DsaWeek {
-  id: string;
-  weekNumber: number;
-  dateRange: string;
-  title: string;
-  targetCount: number;
-}
-
-export interface CTracingGapItem {
-  id: string;
-  label: string;
-  detail: string;
-  checked: boolean;
-}
-
-export type ProblemDifficulty = 'Easy' | 'Medium' | 'Hard';
-export type SolvedMode = 'Yes' | 'With Hint';
-
-export interface DsaProblem {
-  id: string;
-  date: string; // YYYY-MM-DD
-  name: string;
-  url: string;
-  weekId: string;
-  difficulty: ProblemDifficulty;
-  timeTakenMins: number;
-  solvedSolo: SolvedMode;
-  stlUsed: string[];
-  patternTrigger: string;
-  reattemptResolved?: boolean;
-}
-
-// --- View 4: Morning Run & Sleep Shift ---
+// --- View 3: Morning Run & Sleep Shift ---
 export interface SleepLogEntry {
   id: string;
   date: string; // YYYY-MM-DD
@@ -145,7 +112,7 @@ export interface RunChecklistItem {
   checked: boolean;
 }
 
-// --- View 5: Job Hunt & Weekend Projects ---
+// --- View 4: Job Hunt & Weekend Projects ---
 export type JobStatus = 'Applied' | 'OA' | 'Interview' | 'Offer' | 'Rejected';
 
 export interface JobApplication {
@@ -184,8 +151,6 @@ export interface WarRoomBackup {
     gateSubjects: GateSubject[];
     mockTests: MockTestEntry[];
     mistakes: MistakeEntry[];
-    cTracingChecklist: CTracingGapItem[];
-    dsaProblems: DsaProblem[];
     sleepLogs: SleepLogEntry[];
     runLogs: RunLogEntry[];
     runChecklist: RunChecklistItem[];

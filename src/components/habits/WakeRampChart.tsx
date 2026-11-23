@@ -37,19 +37,12 @@ export const WakeRampChart: React.FC<WakeRampChartProps> = ({ sleepLogs }) => {
 
   return (
     <div className="war-card p-4 sm:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-2">
-            <Sunrise className="h-4 w-4 text-amber-400" />
-            <h3 className="text-sm font-semibold text-zinc-100">Wake-Up Ramp Trend</h3>
-          </div>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Pulling wake-up time smoothly from ~11:30 AM down to the 7:00 AM lock-in.
-          </p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Sunrise className="h-4 w-4 text-amber-400" />
+          <h3 className="text-sm font-medium text-zinc-100">Wake-Up Ramp</h3>
         </div>
-        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[11px] text-emerald-300">
-          Target: 7:00 AM
-        </span>
+        <span className="font-mono text-[11px] text-emerald-400">Target 7:00 AM</span>
       </div>
 
       <div className="mt-4 h-64 w-full">

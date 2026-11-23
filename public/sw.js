@@ -1,4 +1,4 @@
-const CACHE_NAME = 'war-room-v2';
+const CACHE_NAME = 'war-room-v3';
 const CORE_ASSETS = ['/', '/index.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', (event) => {

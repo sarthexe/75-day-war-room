@@ -2,17 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
-  CalendarClock,
   Check,
-  CheckCircle2,
-  Clock,
   Edit3,
+  ExternalLink,
   Plus,
-  Sparkles,
+  SlidersHorizontal,
   Trash2,
   X,
 } from 'lucide-react';
-import { NON_NEGOTIABLES } from '../../data/seedData';
+import { ALGOHUNT_URL, NON_NEGOTIABLES } from '../../data/seedData';
 import {
   BlockCategory,
   DailyHistoryEntry,
@@ -40,15 +38,15 @@ interface CommandCenterViewProps {
   dailyHistory: Record<string, DailyHistoryEntry>;
 }
 
-const CATEGORY_STYLES: Record<BlockCategory, string> = {
-  health: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
-  gate: 'border-violet-500/30 bg-violet-500/10 text-violet-300',
-  dsa: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
-  work: 'border-zinc-700 bg-zinc-800/80 text-zinc-300',
-  commute: 'border-sky-500/30 bg-sky-500/10 text-sky-300',
-  personal: 'border-pink-500/30 bg-pink-500/10 text-pink-300',
-  project: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300',
-  sleep: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-300',
+const CATEGORY_DOT: Record<BlockCategory, string> = {
+  health: 'bg-emerald-400',
+  gate: 'bg-violet-400',
+  dsa: 'bg-amber-400',
+  work: 'bg-zinc-500',
+  commute: 'bg-sky-400',
+  personal: 'bg-pink-400',
+  project: 'bg-cyan-400',
+  sleep: 'bg-indigo-400',
 };
 
 const CATEGORY_OPTIONS: BlockCategory[] = [
@@ -70,10 +68,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   dailyHistory,
 }) => {
   const [now, setNow] = useState(() => new Date());
+  const [editMode, setEditMode] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Add / Edit form states
   const [formStart, setFormStart] = useState('18:00');
   const [formEnd, setFormEnd] = useState('19:00');
   const [formTitle, setFormTitle] = useState('');
@@ -100,13 +98,8 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
     return { completedBlocks, totalBlocks, nonNegHit, pct };
   }, [blocks, todayState.completedBlockIds, todayState.completedNonNegotiableIds]);
 
-  const setPhase = (phase: PhaseId) => {
-    setTodayState((prev) => ({ ...prev, phase }));
-  };
-
-  const setDayType = (dayType: DayTypeId) => {
-    setTodayState((prev) => ({ ...prev, dayType }));
-  };
+  const setPhase = (phase: PhaseId) => setTodayState((prev) => ({ ...prev, phase }));
+  const setDayType = (dayType: DayTypeId) => setTodayState((prev) => ({ ...prev, dayType }));
 
   const toggleBlock = (blockId: string) => {
     setTodayState((prev) => {
@@ -152,9 +145,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
       ...prev,
       completedBlockIds: prev.completedBlockIds.filter((cid) => cid !== id),
     }));
-    if (editingId === id) {
-      setEditingId(null);
-    }
+    if (editingId === id) setEditingId(null);
   };
 
   const startEditBlock = (block: TimeBlock) => {
@@ -208,6 +199,16 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
     setShowAddForm(false);
   };
 
+  const toggleEditMode = () => {
+    setEditMode((prev) => {
+      if (prev) {
+        setShowAddForm(false);
+        setEditingId(null);
+      }
+      return !prev;
+    });
+  };
+
   const formattedClock = now.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
@@ -215,136 +216,107 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   });
 
   const formattedDate = now.toLocaleDateString('en-US', {
-    weekday: 'long',
+    weekday: 'short',
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
   });
 
   return (
     <div className="space-y-6">
-      {/* Header & Live Countdowns */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      {/* Clean Header + Inline Countdowns */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/70 px-2.5 py-1 font-mono text-[11px] text-zinc-400">
-            <Clock className="h-3 w-3 text-emerald-400" />
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">Today</h1>
+          <div className="mt-1 flex items-center gap-2 font-mono text-xs text-zinc-500">
             <span>{formattedDate}</span>
-            <span className="text-zinc-600">·</span>
-            <span className="text-zinc-200">{formattedClock}</span>
+            <span>·</span>
+            <span className="text-zinc-300">{formattedClock}</span>
           </div>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-100 sm:text-3xl">
-            Command Center
-          </h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Execute the timetable. Protect sleep & run. Stack daily non-negotiables.
-          </p>
         </div>
 
-        {/* Countdown Cards */}
-        <div className="grid grid-cols-2 gap-3 sm:w-auto sm:min-w-[360px]">
-          <div className="war-card relative overflow-hidden p-3.5">
-            <div className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-              LWD Countdown
+        <div className="flex items-center gap-2.5">
+          <div className="rounded-lg border border-zinc-800/90 bg-[#18181b] px-3.5 py-2">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+              LWD · Dec 31
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="font-mono text-2xl font-bold text-amber-400 sm:text-3xl">
-                {Math.max(0, daysToLwd)}
-              </span>
-              <span className="font-mono text-xs text-zinc-400">days</span>
+            <div className="mt-0.5 font-mono text-lg font-semibold text-amber-400">
+              {Math.max(0, daysToLwd)}d
             </div>
-            <div className="mt-0.5 font-mono text-[11px] text-zinc-500">Dec 31, 2026</div>
           </div>
 
-          <div className="war-card relative overflow-hidden border-emerald-500/25 p-3.5">
-            <div className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-              GATE CSE 2027
+          <div className="rounded-lg border border-emerald-500/25 bg-[#18181b] px-3.5 py-2">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+              GATE · Feb 6
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="font-mono text-2xl font-bold text-emerald-400 sm:text-3xl">
-                {Math.max(0, daysToGate)}
-              </span>
-              <span className="font-mono text-xs text-zinc-400">days</span>
+            <div className="mt-0.5 font-mono text-lg font-semibold text-emerald-400">
+              {Math.max(0, daysToGate)}d
             </div>
-            <div className="mt-0.5 font-mono text-[11px] text-zinc-500">Feb 6, 2027</div>
           </div>
         </div>
       </div>
 
-      {/* Mode Switchers */}
-      <div className="war-card flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1.5">
-          <div className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-            Transition Phase
-          </div>
-          <div className="inline-flex flex-wrap rounded-lg border border-zinc-800 bg-zinc-950 p-1">
-            <button
-              type="button"
-              onClick={() => setPhase('phase1')}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                todayState.phase === 'phase1'
-                  ? 'bg-zinc-800 text-zinc-100 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              Phase 1: Notice Period <span className="hidden font-mono text-zinc-400 sm:inline">(Nov 24 – Dec 31)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setPhase('phase2')}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                todayState.phase === 'phase2'
-                  ? 'bg-emerald-500/20 text-emerald-300 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              Phase 2: Full-Time Grind <span className="hidden font-mono text-emerald-400/70 sm:inline">(Jan 1 – Feb 5)</span>
-            </button>
-          </div>
+      {/* Compact Phase + Day Type Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="inline-flex rounded-lg border border-zinc-800 bg-zinc-950 p-1">
+          <button
+            type="button"
+            onClick={() => setPhase('phase1')}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              todayState.phase === 'phase1'
+                ? 'bg-zinc-800 text-zinc-100'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            Phase 1 · Notice
+          </button>
+          <button
+            type="button"
+            onClick={() => setPhase('phase2')}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              todayState.phase === 'phase2'
+                ? 'bg-emerald-500/20 text-emerald-300'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            Phase 2 · Full-Time
+          </button>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-            Day Type
-          </div>
-          <div className="inline-flex flex-wrap rounded-lg border border-zinc-800 bg-zinc-950 p-1">
-            {(
-              [
-                { id: 'weekday', label: 'Weekday' },
-                { id: 'weekend_gf', label: 'Weekend – GF Day' },
-                { id: 'weekend_grind', label: 'Weekend – Full Grind' },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setDayType(option.id)}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                  todayState.dayType === option.id
-                    ? 'bg-zinc-800 text-zinc-100 shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+        <div className="inline-flex rounded-lg border border-zinc-800 bg-zinc-950 p-1">
+          {(
+            [
+              { id: 'weekday', label: 'Weekday' },
+              { id: 'weekend_gf', label: 'GF Day' },
+              { id: 'weekend_grind', label: 'Full Grind' },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setDayType(option.id)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                todayState.dayType === option.id
+                  ? 'bg-zinc-800 text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Daily Non-Negotiables Strip */}
-      <div className="war-card p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-emerald-400" />
-            <h2 className="text-sm font-semibold text-zinc-100">Daily Non-Negotiables</h2>
-          </div>
-          <span className="font-mono text-xs text-zinc-400">
-            <span className="font-semibold text-emerald-400">{todayCompletion.nonNegHit}</span>/
-            {NON_NEGOTIABLES.length} locked in
+      {/* Daily Non-Negotiables — Minimal Pill Strip */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-zinc-400">Daily Non-Negotiables</span>
+          <span className="font-mono text-xs text-zinc-500">
+            <span className="text-emerald-400">{todayCompletion.nonNegHit}</span>/
+            {NON_NEGOTIABLES.length}
           </span>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {NON_NEGOTIABLES.map((item) => {
             const checked = todayState.completedNonNegotiableIds.includes(item.id);
             return (
@@ -352,17 +324,17 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => toggleNonNegotiable(item.id)}
-                className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium transition-all active:scale-[0.98] ${
+                className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all active:scale-[0.98] ${
                   checked
-                    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-200 shadow-sm shadow-emerald-950/50'
-                    : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                    ? 'border-emerald-500/45 bg-emerald-500/15 text-emerald-200'
+                    : 'border-zinc-800 bg-[#18181b] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                 }`}
               >
                 <span
-                  className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                  className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
                     checked
                       ? 'border-emerald-400 bg-emerald-400 text-zinc-950'
-                      : 'border-zinc-700 bg-zinc-900'
+                      : 'border-zinc-700'
                   }`}
                 >
                   {checked && <Check className="h-2.5 w-2.5 stroke-[3]" />}
@@ -374,49 +346,58 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         </div>
       </div>
 
-      {/* Interactive Daily Timetable */}
+      {/* Timetable */}
       <div className="war-card overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3.5 sm:px-5">
-          <div className="flex items-center gap-2.5">
-            <CalendarClock className="h-4 w-4 text-emerald-400" />
-            <div>
-              <h2 className="text-sm font-semibold text-zinc-100">Interactive Daily Timetable</h2>
-              <p className="font-mono text-[11px] text-zinc-500">
-                {todayCompletion.completedBlocks}/{todayCompletion.totalBlocks} blocks done · Overall today:{' '}
-                <span className="text-emerald-400">{todayCompletion.pct}%</span>
-              </p>
-            </div>
+        <div className="flex items-center justify-between gap-3 border-b border-zinc-800/80 px-4 py-3 sm:px-5">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-medium text-zinc-100">Schedule</h2>
+            <span className="font-mono text-xs text-zinc-500">
+              {todayCompletion.completedBlocks}/{todayCompletion.totalBlocks} ·{' '}
+              <span className="text-emerald-400">{todayCompletion.pct}%</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
+            {editMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(null);
+                  setFormStart('18:00');
+                  setFormEnd('19:00');
+                  setFormTitle('');
+                  setFormSubtitle('');
+                  setFormCategory('gate');
+                  setShowAddForm((prev) => !prev);
+                }}
+                className="war-btn-secondary py-1 text-xs"
+              >
+                {showAddForm ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                {showAddForm ? 'Cancel' : 'Add'}
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => {
-                setEditingId(null);
-                setFormStart('18:00');
-                setFormEnd('19:00');
-                setFormTitle('');
-                setFormSubtitle('');
-                setFormCategory('gate');
-                setShowAddForm((prev) => !prev);
-              }}
-              className="war-btn-secondary text-xs"
+              onClick={toggleEditMode}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
+                editMode
+                  ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                  : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200'
+              }`}
             >
-              {showAddForm ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-              {showAddForm ? 'Cancel' : 'Add Block'}
+              <SlidersHorizontal className="h-3 w-3" />
+              {editMode ? 'Done' : 'Edit'}
             </button>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="h-1 w-full bg-zinc-900">
+        <div className="h-0.5 w-full bg-zinc-900">
           <div
             className="h-full bg-emerald-500 transition-all duration-300"
             style={{ width: `${todayCompletion.pct}%` }}
           />
         </div>
 
-        {/* Add Block Inline Form */}
         {showAddForm && (
           <form
             onSubmit={handleAddBlock}
@@ -424,7 +405,6 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-[11px] text-zinc-500">Start</label>
                 <input
                   type="time"
                   value={formStart}
@@ -434,7 +414,6 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-[11px] text-zinc-500">End</label>
                 <input
                   type="time"
                   value={formEnd}
@@ -444,10 +423,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                 />
               </div>
               <div className="sm:col-span-3">
-                <label className="mb-1 block text-[11px] text-zinc-500">Title</label>
                 <input
                   type="text"
-                  placeholder="e.g. PYQ Drill"
+                  placeholder="Block title"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   className="war-input text-xs"
@@ -455,17 +433,15 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                 />
               </div>
               <div className="sm:col-span-3">
-                <label className="mb-1 block text-[11px] text-zinc-500">Focus / Notes</label>
                 <input
                   type="text"
-                  placeholder="Optional details"
+                  placeholder="Short note (optional)"
                   value={formSubtitle}
                   onChange={(e) => setFormSubtitle(e.target.value)}
                   className="war-input text-xs"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-[11px] text-zinc-500">Tag</label>
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value as BlockCategory)}
@@ -494,8 +470,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </form>
         )}
 
-        {/* Block Rows */}
-        <div className="divide-y divide-zinc-800/70">
+        <div className="divide-y divide-zinc-800/60">
           {blocks.map((block, index) => {
             const checked = todayState.completedBlockIds.includes(block.id);
             const isLive = isBlockCurrentlyActive(block.startTime, block.endTime, now);
@@ -581,34 +556,36 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             return (
               <div
                 key={block.id}
-                className={`group flex flex-col gap-2.5 px-4 py-3.5 transition-colors sm:flex-row sm:items-center sm:justify-between sm:px-5 ${
+                className={`flex items-center justify-between gap-3 px-4 py-3 transition-colors sm:px-5 ${
                   isLive
-                    ? 'bg-emerald-500/[0.07] ring-1 ring-inset ring-emerald-500/35'
+                    ? 'bg-emerald-500/[0.06] ring-1 ring-inset ring-emerald-500/30'
                     : checked
-                      ? 'bg-zinc-950/35'
-                      : 'hover:bg-zinc-900/50'
+                      ? 'opacity-55'
+                      : 'hover:bg-zinc-900/40'
                 }`}
               >
-                <div className="flex items-start gap-3 sm:items-center">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <button
                     type="button"
                     onClick={() => toggleBlock(block.id)}
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all sm:mt-0 ${
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
                       checked
                         ? 'border-emerald-500 bg-emerald-500 text-zinc-950'
                         : 'border-zinc-700 bg-zinc-950 text-transparent hover:border-zinc-500'
                     }`}
                     aria-label={`Toggle ${block.title}`}
                   >
-                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                    <Check className="h-3 w-3 stroke-[3]" />
                   </button>
 
-                  <div className="min-w-[116px] shrink-0 font-mono text-xs text-zinc-400">
+                  <span className="hidden w-[104px] shrink-0 font-mono text-xs text-zinc-500 sm:inline">
                     {timeLabel}
-                  </div>
+                  </span>
+
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${CATEGORY_DOT[block.category]}`} />
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span
                         className={`text-sm font-medium ${
                           checked ? 'text-zinc-500 line-through' : 'text-zinc-100'
@@ -616,81 +593,87 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                       >
                         {block.title}
                       </span>
-                      <span
-                        className={`rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase ${CATEGORY_STYLES[block.category]}`}
-                      >
-                        {block.category}
+                      <span className="font-mono text-[11px] text-zinc-500 sm:hidden">
+                        {timeLabel}
                       </span>
                       {isLive && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-300">
                           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                          LIVE NOW
+                          NOW
                         </span>
                       )}
                     </div>
                     {block.subtitle && (
-                      <p className={`mt-0.5 text-xs ${checked ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                        {block.subtitle}
-                      </p>
+                      <p className="truncate text-xs text-zinc-500">{block.subtitle}</p>
                     )}
                   </div>
                 </div>
 
-                {/* Block Controls */}
-                <div className="flex items-center justify-end gap-1 pl-8 sm:pl-0 sm:opacity-70 sm:transition-opacity sm:group-hover:opacity-100">
-                  <button
-                    type="button"
-                    onClick={() => moveBlock(index, -1)}
-                    disabled={index === 0}
-                    className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-25"
-                    title="Move up"
-                    aria-label="Move block up"
-                  >
-                    <ArrowUp className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveBlock(index, 1)}
-                    disabled={index === blocks.length - 1}
-                    className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-25"
-                    title="Move down"
-                    aria-label="Move block down"
-                  >
-                    <ArrowDown className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => startEditBlock(block)}
-                    className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
-                    title="Edit block"
-                    aria-label="Edit block"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteBlock(block.id)}
-                    className="rounded p-1.5 text-zinc-500 hover:bg-rose-500/10 hover:text-rose-400"
-                    title="Delete block"
-                    aria-label="Delete block"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                {/* Right side: AlgoHunt link on DSA blocks, or Edit controls */}
+                <div className="flex shrink-0 items-center gap-1">
+                  {!editMode && block.category === 'dsa' && (
+                    <a
+                      href={ALGOHUNT_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300 transition-colors hover:bg-amber-500/20"
+                    >
+                      AlgoHunt
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+
+                  {editMode && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => moveBlock(index, -1)}
+                        disabled={index === 0}
+                        className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-25"
+                        aria-label="Move block up"
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveBlock(index, 1)}
+                        disabled={index === blocks.length - 1}
+                        className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-25"
+                        aria-label="Move block down"
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startEditBlock(block)}
+                        className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+                        aria-label="Edit block"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteBlock(block.id)}
+                        className="rounded p-1.5 text-zinc-500 hover:bg-rose-500/10 hover:text-rose-400"
+                        aria-label="Delete block"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
           })}
 
           {blocks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-center text-zinc-500">
-              <CheckCircle2 className="h-8 w-8 text-zinc-700" />
-              <p className="mt-2 text-sm">No time blocks in this schedule yet.</p>
+            <div className="py-10 text-center text-xs text-zinc-500">
+              No blocks in this schedule. Click Edit → Add to create one.
             </div>
           )}
         </div>
       </div>
 
-      {/* 75-Day Heatmap */}
       <Heatmap75 history={dailyHistory} />
     </div>
   );

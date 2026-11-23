@@ -1,8 +1,5 @@
 import {
-  CTracingGapItem,
   DailyHistoryEntry,
-  DsaProblem,
-  DsaWeek,
   GateSubject,
   JobApplication,
   MistakeEntry,
@@ -17,6 +14,8 @@ import {
   WeekendProject,
 } from '../types';
 import { getTodayISO } from '../utils/date';
+
+export const ALGOHUNT_URL = 'https://algohunt.bharathships.me/explore';
 
 export const NON_NEGOTIABLES: NonNegotiableItem[] = [
   { id: 'nn_run', label: 'Morning Run' },
@@ -549,104 +548,6 @@ export const SEED_MISTAKES: MistakeEntry[] = [
   },
 ];
 
-export const DSA_WEEKS: DsaWeek[] = [
-  {
-    id: 'week_1',
-    weekNumber: 1,
-    dateRange: 'Nov 24–30',
-    title: 'Arrays, Hashing, Two Pointers, Sliding Window',
-    targetCount: 12,
-  },
-  {
-    id: 'week_2',
-    weekNumber: 2,
-    dateRange: 'Dec 1–7',
-    title: 'Binary Search, Linked Lists, Stacks & Queues',
-    targetCount: 12,
-  },
-  {
-    id: 'week_3',
-    weekNumber: 3,
-    dateRange: 'Dec 8–14',
-    title: 'Binary Trees, BSTs, Heaps & Greedy',
-    targetCount: 12,
-  },
-  {
-    id: 'week_4',
-    weekNumber: 4,
-    dateRange: 'Dec 15–21',
-    title: 'Graphs & Backtracking',
-    targetCount: 10,
-  },
-  {
-    id: 'week_5',
-    weekNumber: 5,
-    dateRange: 'Dec 22–31',
-    title: 'Dynamic Programming (1D, 2D, Knapsack, Strings)',
-    targetCount: 10,
-  },
-];
-
-export const SEED_C_TRACING_CHECKLIST: CTracingGapItem[] = [
-  {
-    id: 'ct_1',
-    label: 'Pointer arithmetic & 2D array decay',
-    detail: 'a[i][j] === *(*(a + i) + j); sizeof(arr) vs decayed int (*p)[COLS]',
-    checked: false,
-  },
-  {
-    id: 'ct_2',
-    label: 'static in recursion',
-    detail: 'Single shared static variable across recursive stack frames; initialized once',
-    checked: false,
-  },
-  {
-    id: 'ct_3',
-    label: 'Raw struct double pointers',
-    detail: 'Modifying head pointer via Node** head_ref inside linked-list functions',
-    checked: false,
-  },
-  {
-    id: 'ct_4',
-    label: 'String literals vs char[]',
-    detail: 'char *s = "abc" lives in read-only memory; char s[] = "abc" is mutable on stack',
-    checked: false,
-  },
-  {
-    id: 'ct_5',
-    label: 'Evaluation order & short-circuiting',
-    detail: '&&, ||, ?: sequence points; avoid UB from modifying variable twice without sequence point',
-    checked: false,
-  },
-];
-
-export const SEED_DSA_PROBLEMS: DsaProblem[] = [
-  {
-    id: 'dsa_1',
-    date: '2026-11-23',
-    name: 'Longest Substring Without Repeating Characters',
-    url: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/',
-    weekId: 'week_1',
-    difficulty: 'Medium',
-    timeTakenMins: 24,
-    solvedSolo: 'Yes',
-    stlUsed: ['unordered_map', 'max'],
-    patternTrigger: 'Track last seen index in an array/map and jump left pointer to max(left, last[c] + 1) on duplicate.',
-  },
-  {
-    id: 'dsa_2',
-    date: '2026-11-23',
-    name: 'Subarray Sum Equals K',
-    url: 'https://leetcode.com/problems/subarray-sum-equals-k/',
-    weekId: 'week_1',
-    difficulty: 'Medium',
-    timeTakenMins: 38,
-    solvedSolo: 'With Hint',
-    stlUsed: ['unordered_map'],
-    patternTrigger: 'Negative numbers break sliding window; store prefixSum frequency map seeded with {0: 1} and query prefix - k.',
-  },
-];
-
 export const SEED_SLEEP_LOGS: SleepLogEntry[] = [
   {
     id: 'slp_1',
@@ -774,8 +675,6 @@ export function createSeedBackup(): WarRoomBackup {
       gateSubjects: SEED_GATE_SUBJECTS,
       mockTests: SEED_MOCK_TESTS,
       mistakes: SEED_MISTAKES,
-      cTracingChecklist: SEED_C_TRACING_CHECKLIST,
-      dsaProblems: SEED_DSA_PROBLEMS,
       sleepLogs: SEED_SLEEP_LOGS,
       runLogs: SEED_RUN_LOGS,
       runChecklist: SEED_RUN_CHECKLIST,

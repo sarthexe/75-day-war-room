@@ -79,28 +79,20 @@ export const Heatmap75: React.FC<Heatmap75Props> = ({ history }) => {
   return (
     <div className="war-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-zinc-100">75-Day War Room Heatmap</h3>
-            <span className="rounded-full border border-zinc-800 bg-zinc-950 px-2 py-0.5 font-mono text-[10px] text-zinc-400">
-              Nov 24 → Feb 6
-            </span>
-          </div>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Auto-archives daily timetable + non-negotiable completion at date rollover.
-          </p>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium text-zinc-200">75-Day Consistency</h3>
+          <span className="font-mono text-[11px] text-zinc-500">Nov 24 → Feb 6</span>
         </div>
 
-        <div className="flex items-center gap-4 font-mono text-xs">
-          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5">
+        <div className="flex items-center gap-3 font-mono text-xs text-zinc-400">
+          <span className="inline-flex items-center gap-1">
             <Flame className="h-3.5 w-3.5 text-amber-400" />
-            <span className="text-zinc-400">Streak</span>
-            <span className="font-semibold text-zinc-100">{stats.streak}d</span>
-          </div>
-          <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5">
-            <span className="text-zinc-400">Avg </span>
-            <span className="font-semibold text-emerald-400">{stats.avgPct}%</span>
-          </div>
+            <strong className="text-zinc-100">{stats.streak}d</strong>
+          </span>
+          <span>·</span>
+          <span>
+            Avg <strong className="text-emerald-400">{stats.avgPct}%</strong>
+          </span>
         </div>
       </div>
 

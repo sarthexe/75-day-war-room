@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AuthModal } from './components/auth/AuthModal';
 import { CareerView } from './components/career/CareerView';
 import { CommandCenterView } from './components/dashboard/CommandCenterView';
-import { DsaTrackerView } from './components/dsa/DsaTrackerView';
 import { GateTrackerView } from './components/gate/GateTrackerView';
 import { HabitsView } from './components/habits/HabitsView';
 import {
@@ -12,14 +11,10 @@ import {
   SyncTone,
 } from './components/layout/Navigation';
 import { SettingsModal } from './components/layout/SettingsModal';
-import { useAuth } from './hooks/useAuth';
-import { describeSync, useCloudSync } from './hooks/useCloudSync';
 import {
   createInitialTodayState,
   NON_NEGOTIABLES,
-  SEED_C_TRACING_CHECKLIST,
   SEED_DAILY_HISTORY,
-  SEED_DSA_PROBLEMS,
   SEED_GATE_SUBJECTS,
   SEED_JOB_APPLICATIONS,
   SEED_MISTAKES,
@@ -30,12 +25,11 @@ import {
   SEED_SLEEP_LOGS,
   SEED_WEEKEND_PROJECTS,
 } from './data/seedData';
+import { useAuth } from './hooks/useAuth';
+import { describeSync, useCloudSync } from './hooks/useCloudSync';
 import { STORAGE_KEYS, usePersistedState } from './hooks/usePersistedState';
-import { useProtocolTimer } from './hooks/useProtocolTimer';
-import {
-  CTracingGapItem,
+import type {
   DailyHistoryEntry,
-  DsaProblem,
   GateSubject,
   JobApplication,
   MistakeEntry,
@@ -46,6 +40,7 @@ import {
   SleepLogEntry,
   TodayState,
   ViewId,
+  WarRoomBackup,
   WeekendProject,
 } from './types';
 import {
@@ -54,7 +49,6 @@ import {
   getScheduleKey,
   getTodayISO,
 } from './utils/date';
-import type { WarRoomBackup } from './types';
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -98,14 +92,6 @@ export const App: React.FC = () => {
     STORAGE_KEYS.mistakes,
     SEED_MISTAKES
   );
-  const [cTracingChecklist, setCTracingChecklist] = usePersistedState<CTracingGapItem[]>(
-    STORAGE_KEYS.cTracingChecklist,
-    SEED_C_TRACING_CHECKLIST
-  );
-  const [dsaProblems, setDsaProblems] = usePersistedState<DsaProblem[]>(
-    STORAGE_KEYS.dsaProblems,
-    SEED_DSA_PROBLEMS
-  );
   const [sleepLogs, setSleepLogs] = usePersistedState<SleepLogEntry[]>(
     STORAGE_KEYS.sleepLogs,
     SEED_SLEEP_LOGS
@@ -127,10 +113,7 @@ export const App: React.FC = () => {
     SEED_WEEKEND_PROJECTS
   );
 
-  // 60-minute DSA Protocol Timer lifted to App so it persists across view switches
-  const protocolTimer = useProtocolTimer();
-
-  // --- Cloud sync (Supabase) -------------------------------------------------
+  // Cloud sync (Supabase)
   const auth = useAuth();
 
   const cloudPayload = useMemo<WarRoomBackup['data']>(
@@ -141,8 +124,6 @@ export const App: React.FC = () => {
       gateSubjects,
       mockTests,
       mistakes,
-      cTracingChecklist,
-      dsaProblems,
       sleepLogs,
       runLogs,
       runChecklist,
@@ -156,8 +137,6 @@ export const App: React.FC = () => {
       gateSubjects,
       mockTests,
       mistakes,
-      cTracingChecklist,
-      dsaProblems,
       sleepLogs,
       runLogs,
       runChecklist,
@@ -185,7 +164,7 @@ export const App: React.FC = () => {
     void auth.signOut();
   };
 
-  // Track online/offline state for commute awareness
+  // Track online/offline state
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -240,7 +219,7 @@ export const App: React.FC = () => {
     return () => window.clearInterval(intervalId);
   }, [todayState, schedules, setDailyHistory, setTodayState]);
 
-  // Live-sync today's completion snapshot into dailyHistory so Heatmap reflects live progress
+  // Live-sync today's completion snapshot into dailyHistory
   useEffect(() => {
     const currentISO = getTodayISO();
     if (todayState.date !== currentISO) return;
@@ -290,7 +269,7 @@ export const App: React.FC = () => {
     setDailyHistory,
   ]);
 
-  // Global keyboard shortcuts: 1-5 to switch views, Space to toggle DSA timer when on DSA view
+  // Global keyboard shortcuts: 1-4 to switch views, Esc to close modals
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -308,24 +287,16 @@ export const App: React.FC = () => {
 
       if (settingsOpen || authOpen) return;
 
-      const idx = ['1', '2', '3', '4', '5'].indexOf(e.key);
+      const idx = ['1', '2', '3', '4'].indexOf(e.key);
       if (idx !== -1) {
         e.preventDefault();
         setActiveView(NAV_ITEMS[idx].id);
-        return;
-      }
-
-      if (e.code === 'Space' && activeView === 'dsa') {
-        // Avoid double-triggering if user focused a button and pressed Space
-        if (e.target instanceof HTMLButtonElement) return;
-        e.preventDefault();
-        protocolTimer.toggleRun();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeView, settingsOpen, authOpen, protocolTimer]);
+  }, [settingsOpen, authOpen]);
 
   const daysToGate = daysUntil(GATE_TARGET_DATE);
 
@@ -335,8 +306,6 @@ export const App: React.FC = () => {
     onOpenSettings: () => setSettingsOpen(true),
     isOnline,
     daysToGate,
-    timerRunning: protocolTimer.isRunning,
-    timerRemainingSec: protocolTimer.remainingTotalSec,
     accountEmail: auth.email,
     syncLabel,
     syncTone,
@@ -363,8 +332,8 @@ export const App: React.FC = () => {
       <DesktopSidebar {...navProps} />
       <MobileHeaderAndTabs {...navProps} />
 
-      <main className="flex-1 overflow-x-hidden px-4 pb-24 pt-5 sm:px-6 md:px-8 md:pb-12 md:pt-7">
-        <div className="mx-auto max-w-6xl">
+      <main className="flex-1 overflow-x-hidden px-4 pb-24 pt-6 sm:px-8 md:px-10 md:pb-14 md:pt-8">
+        <div className="mx-auto max-w-4xl">
           {activeView === 'dashboard' && (
             <CommandCenterView
               schedules={schedules}
@@ -383,16 +352,6 @@ export const App: React.FC = () => {
               setMockTests={setMockTests}
               mistakes={mistakes}
               setMistakes={setMistakes}
-            />
-          )}
-
-          {activeView === 'dsa' && (
-            <DsaTrackerView
-              timer={protocolTimer}
-              cTracingChecklist={cTracingChecklist}
-              setCTracingChecklist={setCTracingChecklist}
-              problems={dsaProblems}
-              setProblems={setDsaProblems}
             />
           )}
 
