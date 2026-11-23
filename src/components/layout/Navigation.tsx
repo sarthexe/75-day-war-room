@@ -2,11 +2,15 @@ import React from 'react';
 import {
   BookOpen,
   Briefcase,
+  Cloud,
+  CloudOff,
   Code2,
   Flame,
   LayoutDashboard,
+  LogOut,
   Settings,
   Timer,
+  UserRound,
   Wifi,
   WifiOff,
 } from 'lucide-react';
@@ -29,6 +33,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'career', label: 'Jobs & Projects', shortLabel: 'Career', shortcut: '5', icon: Briefcase },
 ];
 
+export type SyncTone = 'ok' | 'warn' | 'off' | 'busy';
+
 interface NavigationProps {
   activeView: ViewId;
   onSelectView: (view: ViewId) => void;
@@ -37,7 +43,26 @@ interface NavigationProps {
   daysToGate: number;
   timerRunning: boolean;
   timerRemainingSec: number;
+  accountEmail: string | null;
+  syncLabel: string;
+  syncTone: SyncTone;
+  onAccountClick: () => void;
+  onSignOut: () => void;
 }
+
+const TONE_DOT: Record<SyncTone, string> = {
+  ok: 'bg-emerald-400',
+  warn: 'bg-amber-400',
+  off: 'bg-zinc-500',
+  busy: 'bg-sky-400 animate-pulse',
+};
+
+const TONE_TEXT: Record<SyncTone, string> = {
+  ok: 'text-emerald-400',
+  warn: 'text-amber-400',
+  off: 'text-zinc-500',
+  busy: 'text-sky-400',
+};
 
 export const DesktopSidebar: React.FC<NavigationProps> = ({
   activeView,
@@ -47,6 +72,11 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({
   daysToGate,
   timerRunning,
   timerRemainingSec,
+  accountEmail,
+  syncLabel,
+  syncTone,
+  onAccountClick,
+  onSignOut,
 }) => {
   return (
     <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:border-r md:border-zinc-800 md:bg-[#09090b]">
@@ -109,7 +139,48 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({
         })}
       </nav>
 
-      <div className="border-t border-zinc-800/80 p-3 space-y-2">
+      <div className="space-y-2 border-t border-zinc-800/80 p-3">
+        {/* Account / sync */}
+        <div className="rounded-lg border border-zinc-800 bg-[#18181b] p-2.5">
+          {accountEmail ? (
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={onAccountClick}
+                className="min-w-0 flex-1 text-left"
+                title="Cloud sync settings"
+              >
+                <div className="truncate font-mono text-[11px] text-zinc-200">{accountEmail}</div>
+                <div className={`mt-0.5 flex items-center gap-1.5 text-[10px] ${TONE_TEXT[syncTone]}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${TONE_DOT[syncTone]}`} />
+                  <span className="truncate">{syncLabel}</span>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="rounded p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-rose-400"
+                title="Sign out"
+                aria-label="Sign out"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onAccountClick}
+              className="flex w-full items-center justify-between gap-2 text-left"
+            >
+              <span className="flex items-center gap-2 text-[11px] font-medium text-zinc-300">
+                <Cloud className="h-3.5 w-3.5 text-zinc-400" />
+                Sign in to sync
+              </span>
+              <span className="font-mono text-[10px] text-zinc-500">phone ↔ laptop</span>
+            </button>
+          )}
+        </div>
+
         <div className="flex items-center justify-between rounded-lg border border-zinc-800/70 bg-zinc-950/60 px-3 py-2 text-xs">
           <span className="flex items-center gap-1.5 text-zinc-400">
             {isOnline ? (
@@ -145,6 +216,10 @@ export const MobileHeaderAndTabs: React.FC<NavigationProps> = ({
   daysToGate,
   timerRunning,
   timerRemainingSec,
+  accountEmail,
+  syncLabel,
+  syncTone,
+  onAccountClick,
 }) => {
   return (
     <>
@@ -158,9 +233,16 @@ export const MobileHeaderAndTabs: React.FC<NavigationProps> = ({
             <div className="flex items-center gap-1.5 font-mono text-[10px] text-zinc-500">
               <span>GATE T-{Math.max(0, daysToGate)}D</span>
               <span>·</span>
-              <span className={isOnline ? 'text-emerald-400' : 'text-amber-400'}>
-                {isOnline ? 'Local' : 'Offline'}
-              </span>
+              {accountEmail ? (
+                <span className={`flex items-center gap-1 ${TONE_TEXT[syncTone]}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${TONE_DOT[syncTone]}`} />
+                  {syncLabel}
+                </span>
+              ) : (
+                <span className={isOnline ? 'text-emerald-400' : 'text-amber-400'}>
+                  {isOnline ? 'Local' : 'Offline'}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -176,6 +258,18 @@ export const MobileHeaderAndTabs: React.FC<NavigationProps> = ({
               {formatMmSs(timerRemainingSec)}
             </button>
           )}
+          <button
+            type="button"
+            onClick={onAccountClick}
+            className={`rounded-lg border bg-[#18181b] p-2 ${
+              accountEmail
+                ? 'border-emerald-500/30 text-emerald-400'
+                : 'border-zinc-800 text-zinc-300'
+            }`}
+            aria-label={accountEmail ? 'Cloud sync' : 'Sign in to sync'}
+          >
+            {accountEmail ? <Cloud className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
+          </button>
           <button
             type="button"
             onClick={onOpenSettings}
@@ -211,3 +305,10 @@ export const MobileHeaderAndTabs: React.FC<NavigationProps> = ({
     </>
   );
 };
+
+export const SyncOfflineBadge: React.FC<{ tone: SyncTone; label: string }> = ({ tone, label }) => (
+  <span className={`inline-flex items-center gap-1.5 text-[11px] ${TONE_TEXT[tone]}`}>
+    <CloudOff className="h-3 w-3" />
+    {label}
+  </span>
+);

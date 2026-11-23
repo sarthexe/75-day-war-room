@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AuthModal } from './components/auth/AuthModal';
 import { CareerView } from './components/career/CareerView';
 import { CommandCenterView } from './components/dashboard/CommandCenterView';
 import { DsaTrackerView } from './components/dsa/DsaTrackerView';
@@ -8,8 +9,11 @@ import {
   DesktopSidebar,
   MobileHeaderAndTabs,
   NAV_ITEMS,
+  SyncTone,
 } from './components/layout/Navigation';
 import { SettingsModal } from './components/layout/SettingsModal';
+import { useAuth } from './hooks/useAuth';
+import { describeSync, useCloudSync } from './hooks/useCloudSync';
 import {
   createInitialTodayState,
   NON_NEGOTIABLES,
@@ -50,6 +54,7 @@ import {
   getScheduleKey,
   getTodayISO,
 } from './utils/date';
+import type { WarRoomBackup } from './types';
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -65,6 +70,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewId>('dashboard');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
 
   // Persisted application state
@@ -123,6 +129,61 @@ export const App: React.FC = () => {
 
   // 60-minute DSA Protocol Timer lifted to App so it persists across view switches
   const protocolTimer = useProtocolTimer();
+
+  // --- Cloud sync (Supabase) -------------------------------------------------
+  const auth = useAuth();
+
+  const cloudPayload = useMemo<WarRoomBackup['data']>(
+    () => ({
+      schedules,
+      todayState,
+      dailyHistory,
+      gateSubjects,
+      mockTests,
+      mistakes,
+      cTracingChecklist,
+      dsaProblems,
+      sleepLogs,
+      runLogs,
+      runChecklist,
+      jobApplications,
+      weekendProjects,
+    }),
+    [
+      schedules,
+      todayState,
+      dailyHistory,
+      gateSubjects,
+      mockTests,
+      mistakes,
+      cTracingChecklist,
+      dsaProblems,
+      sleepLogs,
+      runLogs,
+      runChecklist,
+      jobApplications,
+      weekendProjects,
+    ]
+  );
+
+  const cloud = useCloudSync(auth.user, cloudPayload);
+
+  const syncTone: SyncTone =
+    cloud.status === 'synced'
+      ? 'ok'
+      : cloud.status === 'syncing'
+        ? 'busy'
+        : cloud.status === 'error'
+          ? 'warn'
+          : cloud.status === 'signed-out' || cloud.status === 'disabled'
+            ? 'off'
+            : 'warn';
+
+  const syncLabel = describeSync(cloud.status, cloud.lastSyncedAt);
+
+  const handleSignOut = () => {
+    void auth.signOut();
+  };
 
   // Track online/offline state for commute awareness
   useEffect(() => {
@@ -240,7 +301,12 @@ export const App: React.FC = () => {
         return;
       }
 
-      if (settingsOpen) return;
+      if (e.key === 'Escape' && authOpen) {
+        setAuthOpen(false);
+        return;
+      }
+
+      if (settingsOpen || authOpen) return;
 
       const idx = ['1', '2', '3', '4', '5'].indexOf(e.key);
       if (idx !== -1) {
@@ -259,7 +325,7 @@ export const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeView, settingsOpen, protocolTimer]);
+  }, [activeView, settingsOpen, authOpen, protocolTimer]);
 
   const daysToGate = daysUntil(GATE_TARGET_DATE);
 
@@ -271,6 +337,25 @@ export const App: React.FC = () => {
     daysToGate,
     timerRunning: protocolTimer.isRunning,
     timerRemainingSec: protocolTimer.remainingTotalSec,
+    accountEmail: auth.email,
+    syncLabel,
+    syncTone,
+    onAccountClick: () => setAuthOpen(true),
+    onSignOut: handleSignOut,
+  };
+
+  const cloudPanelProps = {
+    configured: auth.configured,
+    email: auth.email,
+    syncLabel,
+    syncTone,
+    syncError: cloud.error,
+    onOpenAuth: () => {
+      setSettingsOpen(false);
+      setAuthOpen(true);
+    },
+    onSyncNow: cloud.syncNow,
+    onSignOut: handleSignOut,
   };
 
   return (
@@ -337,6 +422,17 @@ export const App: React.FC = () => {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         isOnline={isOnline}
+        cloud={cloudPanelProps}
+      />
+
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        auth={auth}
+        status={cloud.status}
+        lastSyncedAt={cloud.lastSyncedAt}
+        syncError={cloud.error}
+        onSyncNow={cloud.syncNow}
       />
     </div>
   );

@@ -135,6 +135,20 @@ export function importAllWarRoomData(parsed: unknown): { ok: true } | { ok: fals
   return { ok: true };
 }
 
+/**
+ * Writes a full remote snapshot into localStorage and notifies every
+ * usePersistedState subscriber so React state rehydrates live.
+ */
+export function writeAllWarRoomData(partial: Partial<WarRoomBackup['data']>): void {
+  const seed = createSeedBackup().data;
+  const keys = Object.keys(STORAGE_KEYS) as StorageKeyName[];
+  for (const k of keys) {
+    const value = partial[k] ?? seed[k];
+    window.localStorage.setItem(STORAGE_KEYS[k], JSON.stringify(value));
+  }
+  window.dispatchEvent(new Event(SYNC_EVENT));
+}
+
 export function resetAllToSeedData(): void {
   const seed = createSeedBackup().data;
   const keys = Object.keys(STORAGE_KEYS) as StorageKeyName[];

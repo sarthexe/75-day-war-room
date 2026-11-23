@@ -1,8 +1,11 @@
 import React, { useRef, useState } from 'react';
 import {
   CheckCircle2,
+  Cloud,
   Database,
   Download,
+  LogOut,
+  RefreshCw,
   RotateCcw,
   ShieldAlert,
   Upload,
@@ -18,13 +21,32 @@ import {
 } from '../../hooks/usePersistedState';
 import { getTodayISO } from '../../utils/date';
 
+export interface CloudPanelProps {
+  configured: boolean;
+  email: string | null;
+  syncLabel: string;
+  syncTone: 'ok' | 'warn' | 'off' | 'busy';
+  syncError: string | null;
+  onOpenAuth: () => void;
+  onSyncNow: () => void;
+  onSignOut: () => void;
+}
+
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
   isOnline: boolean;
+  cloud: CloudPanelProps;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose, isOnline }) => {
+const TONE_TEXT = {
+  ok: 'text-emerald-400',
+  warn: 'text-amber-400',
+  off: 'text-zinc-500',
+  busy: 'text-sky-400',
+} as const;
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose, isOnline, cloud }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
@@ -93,7 +115,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose, isO
     setConfirmReset(false);
     setStatusMessage({
       type: 'success',
-      text: 'All schedules, syllabus progress, logs, and checklists reset to initial seed data.',
+      text: 'All schedules, syllabus progress, logs, and checklists reset to initial seed data. Local only — cloud copy is overwritten by the next sync.',
     });
   };
 
@@ -103,14 +125,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose, isO
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-[#18181b] p-6 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-zinc-800 bg-[#18181b] p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
           <div>
             <h2 className="text-lg font-semibold text-zinc-100">War Room Data & Settings</h2>
             <p className="mt-0.5 text-xs text-zinc-400">
-              100% local-first storage in your browser. Export JSON anytime to sync phone & desktop.
+              Local-first storage with optional cloud sync. Export JSON anytime as a hard backup.
             </p>
           </div>
           <button
@@ -123,8 +145,74 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose, isO
           </button>
         </div>
 
+        {/* Cloud sync */}
+        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Cloud className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="text-sm font-medium text-zinc-200">Cloud Sync</span>
+              </div>
+
+              {!cloud.configured ? (
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Not configured. Add <span className="font-mono">VITE_SUPABASE_URL</span> and{' '}
+                  <span className="font-mono">VITE_SUPABASE_ANON_KEY</span>, then redeploy.
+                </p>
+              ) : cloud.email ? (
+                <>
+                  <div className="mt-1 truncate font-mono text-[11px] text-zinc-300">{cloud.email}</div>
+                  <div className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${TONE_TEXT[cloud.syncTone]}`}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {cloud.syncLabel}
+                  </div>
+                  {cloud.syncError && (
+                    <p className="mt-1 text-[11px] text-rose-400">{cloud.syncError}</p>
+                  )}
+                </>
+              ) : (
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Signed out. This device works offline-only until you sign in.
+                </p>
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1.5">
+              {cloud.email ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={cloud.onSyncNow}
+                    className="war-btn-secondary px-2 py-1.5 text-[11px]"
+                    title="Push or pull now"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Sync
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cloud.onSignOut}
+                    className="war-btn-secondary px-2 py-1.5 text-[11px] text-zinc-400 hover:text-rose-400"
+                    title="Sign out"
+                  >
+                    <LogOut className="h-3 w-3" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={cloud.onOpenAuth}
+                  className="war-btn-primary px-2.5 py-1.5 text-[11px]"
+                >
+                  {cloud.configured ? 'Sign in' : 'Set up'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Status pills */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
             <div className="flex items-center gap-2 text-xs text-zinc-400">
               <Database className="h-3.5 w-3.5 text-emerald-400" />
