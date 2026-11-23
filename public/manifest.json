@@ -1,0 +1,18 @@
+{
+  "name": "75-Day War Room",
+  "short_name": "War Room",
+  "description": "Local-first GATE CSE 2027, C++ DSA, Running & Career transition command center.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
